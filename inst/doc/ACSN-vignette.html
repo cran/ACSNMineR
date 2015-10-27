@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Paul Deveau" />
+
+<meta name="date" content="2015-10-27" />
+
+<title>ACSN description</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link rel="stylesheet" href="C:\Users\User\Documents\R\win-library\3.2\rmarkdown\rmarkdown\templates\html_vignette\resources\vignette.css" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">ACSN description</h1>
+<h4 class="author"><em>Paul Deveau</em></h4>
+<h4 class="date"><em>2015-10-27</em></h4>
+</div>
+
+
+<div id="acsn-enrichment" class="section level1">
+<h1><a name="I">ACSN Enrichment</a></h1>
+<div id="description" class="section level2">
+<h2><a name="IIA">Description </a></h2>
+<p>ACSNMineR is an R package, freely available.</p>
+<p>ACSN stands for Atlas of Cancer Signaling Networks, and shows gene interaction in pathways relevant to cancer.</p>
+<p>This package is designed for an easy analysis of gene maps (either user imported from gmt files or ACSN maps). Its aim is to allow a statistical analysis of statistically enriched or depleted pathways from a user imported gene list, as well as a graphic representation of results.</p>
+<p>This readme contains:</p>
+<p><a href="#IIA">1. This description</a></p>
+<p><a href="#IIB">2. Usage section</a></p>
+<p><a href="#IIIA">2.1. Pathway analysis</a></p>
+<p><a href="#IIIA1">2.1.1 Import gmt files</a></p>
+<p><a href="#IIIA2">2.1.2 Perform analysis</a></p>
+<p><a href="#IIIB">2.2. Data vizualization</a></p>
+<p><a href="#IVA">2.2.1. Heatmaps</a></p>
+<p><a href="#IVB">2.2.2. Barplots</a></p>
+</div>
+<div id="usage" class="section level2">
+<h2><a name="IIB">Usage </a></h2>
+<div id="pathway-analysis" class="section level3">
+<h3><a name="IIIA">Pathway analysis</a></h3>
+<hr />
+<div id="import-gmt-files" class="section level4">
+<h4><a name = "IIIA1"> Import gmt files </a></h4>
+<p>Gmt files can be imported thanks to the format_from_gmt function. Let’s use saved data from the package:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Retrieve path of the example gmt</span>
+file&lt;-<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;cellcycle_short.gmt&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;ACSNMineR&quot;</span>)
+<span class="co"># Then import it</span>
+gmt&lt;-ACSNMineR::<span class="kw">format_from_gmt</span>(file)</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">V1</th>
+<th align="left">V2</th>
+<th align="left">V3</th>
+<th align="left">V4</th>
+<th align="left">V5</th>
+<th align="left">V6</th>
+<th align="left">V7</th>
+<th align="left">V8</th>
+<th align="left">V9</th>
+<th align="left">V10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">E2F1</td>
+<td align="left">19</td>
+<td align="left">ATM</td>
+<td align="left">ATR</td>
+<td align="left">CHEK2</td>
+<td align="left">CREBBP</td>
+<td align="left">TFDP1</td>
+<td align="left">E2F1</td>
+<td align="left">EP300</td>
+<td align="left">HDAC1</td>
+</tr>
+<tr class="even">
+<td align="left">MAPK</td>
+<td align="left">9</td>
+<td align="left">ATM</td>
+<td align="left">GSK3B</td>
+<td align="left">MAX</td>
+<td align="left">MDM2</td>
+<td align="left">CDKN1A</td>
+<td align="left">TP53</td>
+<td align="left">BCL2</td>
+<td align="left">MYC</td>
+</tr>
+<tr class="odd">
+<td align="left">MOMP_REGULATION</td>
+<td align="left">13</td>
+<td align="left">CDK1</td>
+<td align="left">GSK3B</td>
+<td align="left">PPP1CA</td>
+<td align="left">PPP1CB</td>
+<td align="left">PPP1CC</td>
+<td align="left">TP53</td>
+<td align="left">BBC3</td>
+<td align="left">BCL2</td>
+</tr>
+<tr class="even">
+<td align="left">HEDGEHOG</td>
+<td align="left">9</td>
+<td align="left">CREBBP</td>
+<td align="left">GSK3B</td>
+<td align="left">HDAC1</td>
+<td align="left">CCNB1</td>
+<td align="left">CCNB2</td>
+<td align="left">CCNB3</td>
+<td align="left">CCNC</td>
+<td align="left">BCL2</td>
+</tr>
+<tr class="odd">
+<td align="left">P21CIP</td>
+<td align="left">3</td>
+<td align="left">AKT1</td>
+<td align="left">PCNA</td>
+<td align="left">CDKN1A</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">G2_CC_PHASE</td>
+<td align="left">4</td>
+<td align="left">CDK1</td>
+<td align="left">CDC25C</td>
+<td align="left">WEE1</td>
+<td align="left">CCNB1</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">CYCLIND</td>
+<td align="left">9</td>
+<td align="left">AKT1</td>
+<td align="left">CDC37</td>
+<td align="left">CDK4</td>
+<td align="left">CDK6</td>
+<td align="left">GSK3B</td>
+<td align="left">HSP90AA1</td>
+<td align="left">CCND1</td>
+<td align="left">CCND2</td>
+</tr>
+<tr class="even">
+<td align="left">E2F4</td>
+<td align="left">8</td>
+<td align="left">TFDP2</td>
+<td align="left">E2F4</td>
+<td align="left">E2F5</td>
+<td align="left">HDAC1</td>
+<td align="left">SIN3B</td>
+<td align="left">SUV39H1</td>
+<td align="left">RBL1</td>
+<td align="left">RBL2</td>
+</tr>
+<tr class="odd">
+<td align="left">CYCLINE</td>
+<td align="left">7</td>
+<td align="left">CDK2</td>
+<td align="left">CDKN3</td>
+<td align="left">CCNE1</td>
+<td align="left">CCNE2</td>
+<td align="left">RBL1</td>
+<td align="left">RBL2</td>
+<td align="left">CDKN1B</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">E2F6</td>
+<td align="left">13</td>
+<td align="left">EHMT2</td>
+<td align="left">TFDP1</td>
+<td align="left">TFDP2</td>
+<td align="left">E2F6</td>
+<td align="left">E2F8</td>
+<td align="left">EED</td>
+<td align="left">EHMT1</td>
+<td align="left">EPC1</td>
+</tr>
+</tbody>
+</table>
+<p>ACSN maps are built-in and can easily be accessed through ACSNEnrcihment::ACSN_maps:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Name of available maps:</span>
+<span class="kw">names</span>(ACSNMineR::ACSN_maps)</code></pre></div>
+<table>
+<tbody>
+<tr class="odd">
+<td align="left">Apoptosis</td>
+</tr>
+<tr class="even">
+<td align="left">CellCycle</td>
+</tr>
+<tr class="odd">
+<td align="left">DNA_repair</td>
+</tr>
+<tr class="even">
+<td align="left">EMT_motility</td>
+</tr>
+<tr class="odd">
+<td align="left">ACSN_master</td>
+</tr>
+<tr class="even">
+<td align="left">Survival</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#And accessing them:</span>
+ACSNMineR::ACSN_maps$CellCycle</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">V1</th>
+<th align="left">V2</th>
+<th align="left">V3</th>
+<th align="left">V4</th>
+<th align="left">V5</th>
+<th align="left">V6</th>
+<th align="left">V7</th>
+<th align="left">V8</th>
+<th align="left">V9</th>
+<th align="left">V10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">E2F1</td>
+<td align="left">19</td>
+<td align="left">ATM</td>
+<td align="left">ATR</td>
+<td align="left">CHEK2</td>
+<td align="left">CREBBP</td>
+<td align="left">TFDP1</td>
+<td align="left">E2F1</td>
+<td align="left">EP300</td>
+<td align="left">HDAC1</td>
+</tr>
+<tr class="even">
+<td align="left">MAPK</td>
+<td align="left">9</td>
+<td align="left">ATM</td>
+<td align="left">GSK3B</td>
+<td align="left">MAX</td>
+<td align="left">MDM2</td>
+<td align="left">CDKN1A</td>
+<td align="left">TP53</td>
+<td align="left">BCL2</td>
+<td align="left">MYC</td>
+</tr>
+<tr class="odd">
+<td align="left">MOMP_REGULATION</td>
+<td align="left">13</td>
+<td align="left">CDK1</td>
+<td align="left">GSK3B</td>
+<td align="left">PPP1CA</td>
+<td align="left">PPP1CB</td>
+<td align="left">PPP1CC</td>
+<td align="left">TP53</td>
+<td align="left">BBC3</td>
+<td align="left">BCL2</td>
+</tr>
+<tr class="even">
+<td align="left">HEDGEHOG</td>
+<td align="left">9</td>
+<td align="left">CREBBP</td>
+<td align="left">GSK3B</td>
+<td align="left">HDAC1</td>
+<td align="left">CCNB1</td>
+<td align="left">CCNB2</td>
+<td align="left">CCNB3</td>
+<td align="left">CCNC</td>
+<td align="left">BCL2</td>
+</tr>
+<tr class="odd">
+<td align="left">P21CIP</td>
+<td align="left">3</td>
+<td align="left">AKT1</td>
+<td align="left">PCNA</td>
+<td align="left">CDKN1A</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">G2_CC_PHASE</td>
+<td align="left">4</td>
+<td align="left">CDK1</td>
+<td align="left">CDC25C</td>
+<td align="left">WEE1</td>
+<td align="left">CCNB1</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<p>The gene set that was used for tests is the following:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ACSNMineR::genes_test</code></pre></div>
+<table>
+<tbody>
+<tr class="odd">
+<td align="left">ATM</td>
+</tr>
+<tr class="even">
+<td align="left">ATR</td>
+</tr>
+<tr class="odd">
+<td align="left">CHEK2</td>
+</tr>
+<tr class="even">
+<td align="left">CREBBP</td>
+</tr>
+<tr class="odd">
+<td align="left">TFDP1</td>
+</tr>
+<tr class="even">
+<td align="left">E2F1</td>
+</tr>
+<tr class="odd">
+<td align="left">EP300</td>
+</tr>
+<tr class="even">
+<td align="left">HDAC1</td>
+</tr>
+<tr class="odd">
+<td align="left">KAT2B</td>
+</tr>
+<tr class="even">
+<td align="left">GTF2H1</td>
+</tr>
+<tr class="odd">
+<td align="left">GTF2H2</td>
+</tr>
+<tr class="even">
+<td align="left">GTF2H2B</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="perform-analysis" class="section level4">
+<h4><a name = "IIIA2"> Perform analysis </a></h4>
+<p>Gene set enrichment for a single set can be performed by calling:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Example&lt;-ACSNMineR::<span class="kw">enrichment</span>(ACSNMineR::genes_test,
+    <span class="dt">min_module_size =</span> <span class="dv">10</span>, 
+    <span class="dt">threshold =</span> <span class="fl">0.05</span>,
+    <span class="dt">maps =</span> <span class="kw">list</span>(<span class="dt">cellcycle =</span> ACSNMineR::ACSN_maps$CellCycle))</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">module</th>
+<th align="left">module_size</th>
+<th align="left">nb_genes_in_module</th>
+<th align="left">genes_in_module</th>
+<th align="right">universe_size</th>
+<th align="right">nb_genes_in_universe</th>
+<th align="right">p.value</th>
+<th align="right">p.value.corrected</th>
+<th align="left">test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">E2F1</td>
+<td align="left">19</td>
+<td align="left">12</td>
+<td align="left">ATM ATR CHEK2 CREBBP TFDP1 E2F1 EP300 HDAC1 KAT2B GTF2H1 GTF2H2 GTF2H2B</td>
+<td align="right">104</td>
+<td align="right">12</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="left">greater</td>
+</tr>
+<tr class="even">
+<td align="left">G2_M_CHECKPOINT</td>
+<td align="left">14</td>
+<td align="left">5</td>
+<td align="left">ATM ATR CHEK2 CREBBP KAT2B</td>
+<td align="right">104</td>
+<td align="right">12</td>
+<td align="right">0.0073327</td>
+<td align="right">0.0366633</td>
+<td align="left">greater</td>
+</tr>
+<tr class="odd">
+<td align="left">APOPTOSIS_ENTRY</td>
+<td align="left">10</td>
+<td align="left">4</td>
+<td align="left">ATM ATR CHEK2 E2F1</td>
+<td align="right">104</td>
+<td align="right">12</td>
+<td align="right">0.0115462</td>
+<td align="right">0.0432984</td>
+<td align="left">greater</td>
+</tr>
+<tr class="even">
+<td align="left">G1_S_CHECKPOINT</td>
+<td align="left">12</td>
+<td align="left">5</td>
+<td align="left">ATM ATR CHEK2 E2F1 KAT2B</td>
+<td align="right">104</td>
+<td align="right">12</td>
+<td align="right">0.0032671</td>
+<td align="right">0.0245034</td>
+<td align="left">greater</td>
+</tr>
+</tbody>
+</table>
+<p>Where:</p>
+<ul>
+<li><p>genes_test is a character vector to test</p></li>
+<li><p>min_module_size is the minimal size of a module to be taken into account</p></li>
+<li><p>threshold is the maximal p-value that will be displayed in the results (all modules with p-values higher than threshold will be removed)</p></li>
+<li><p>maps is a list of maps -here we take the cell cycle map from ACSN- imported through the format_from_gmt() function of the package</p></li>
+</ul>
+<p>Gene set enrichment for multiple sets/cohorts can be performed by calling:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Example&lt;-ACSNMineR::<span class="kw">multisample_enrichment</span>(<span class="dt">Genes_by_sample =</span> <span class="kw">list</span>(<span class="dt">set1 =</span> ACSNMineR::genes_test[-<span class="dv">1</span>],
+                                                              <span class="dt">set2 =</span> ACSNMineR::genes_test[-<span class="dv">2</span>]),
+    <span class="dt">maps =</span> ACSNMineR::ACSN_maps$CellCycle,
+    <span class="dt">min_module_size =</span> <span class="dv">10</span>,
+    <span class="dt">cohort_threshold =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(Example[[<span class="dv">1</span>]])</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">module</th>
+<th align="left">module_size</th>
+<th align="left">nb_genes_in_module</th>
+<th align="left">genes_in_module</th>
+<th align="right">universe_size</th>
+<th align="right">nb_genes_in_universe</th>
+<th align="right">p.value</th>
+<th align="right">p.value.corrected</th>
+<th align="left">test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">E2F1</td>
+<td align="left">19</td>
+<td align="left">11</td>
+<td align="left">ATR CHEK2 CREBBP TFDP1 E2F1 EP300 HDAC1 KAT2B GTF2H1 GTF2H2 GTF2H2B</td>
+<td align="right">104</td>
+<td align="right">11</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">greater</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(Example[[<span class="dv">2</span>]])</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">module</th>
+<th align="left">module_size</th>
+<th align="left">nb_genes_in_module</th>
+<th align="left">genes_in_module</th>
+<th align="right">universe_size</th>
+<th align="right">nb_genes_in_universe</th>
+<th align="right">p.value</th>
+<th align="right">p.value.corrected</th>
+<th align="left">test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">E2F1</td>
+<td align="left">19</td>
+<td align="left">11</td>
+<td align="left">ATM CHEK2 CREBBP TFDP1 E2F1 EP300 HDAC1 KAT2B GTF2H1 GTF2H2 GTF2H2B</td>
+<td align="right">104</td>
+<td align="right">11</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">greater</td>
+</tr>
+</tbody>
+</table>
+<p>Where:</p>
+<ul>
+<li><p>Genes_by_sample is a list of character vectors to test</p></li>
+<li><p>min_module_size is the minimal size of a module to be taken into account</p></li>
+<li><p>maps is a list of maps -here we take the cell cycle map from ACSN - imported through the format_from_gmt() function of the package</p></li>
+</ul>
+</div>
+</div>
+<div id="data-visualization" class="section level3">
+<h3><a name="IIIB">Data visualization</a></h3>
+<hr />
+<p>Results from the enrichment analysis function can be transformed to images thanks to the represent enrichment function. Two different plot are available: heatmap and barplot.</p>
+<div id="heatmaps" class="section level4">
+<h4><a name="IVA">Heatmaps</a></h4>
+<hr />
+<p>Heatmaps for single sample or multiple sample representing p-values can be easily generated thanks to the represent_enrichment function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ACSNMineR::<span class="kw">represent_enrichment</span>(<span class="dt">enrichment =</span> <span class="kw">list</span>(
+    <span class="dt">SampleA =</span> ACSNMineR::enrichment_test[<span class="dv">1</span>:<span class="dv">10</span>,], 
+    <span class="dt">SampleB =</span> ACSNMineR::enrichment_test[<span class="dv">3</span>:<span class="dv">10</span>,]),
+    <span class="dt">plot =</span> <span class="st">&quot;heatmap&quot;</span>, 
+    <span class="dt">scale =</span> <span class="st">&quot;log&quot;</span>,
+    <span class="dt">low =</span> <span class="st">&quot;steelblue&quot;</span> , <span class="dt">high =</span><span class="st">&quot;white&quot;</span>,
+    <span class="dt">na.value =</span> <span class="st">&quot;grey&quot;</span>)</code></pre></div>
+<p><img src="ACSN-vignette_files/figure-html/heatmap_plot-1.png" alt="" /></p>
+<p>Where:</p>
+<ul>
+<li><p>enrichment is the result from the enrichment or multisample_enrichment function</p></li>
+<li><p>scale can be set to either identity or log and will affect the gradient of colors</p></li>
+<li><p>low: the color for the low (significant) p-values</p></li>
+<li><p>high: color for the high (less significant) p-values</p></li>
+<li><p>na.value is the color in which tiles which have “NA” should appear</p></li>
+</ul>
+</div>
+<div id="barplots" class="section level4">
+<h4><a name="IVB">Barplots</a></h4>
+<hr />
+<p>A barplot can be achieved by using the following:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ACSNMineR::<span class="kw">represent_enrichment</span>(<span class="dt">enrichment =</span> <span class="kw">list</span>(
+    <span class="dt">SampleA =</span> ACSNMineR::enrichment_test[<span class="dv">1</span>:<span class="dv">10</span>,], 
+    <span class="dt">SampleB =</span> ACSNMineR::enrichment_test[<span class="dv">3</span>:<span class="dv">10</span>,]),
+    <span class="dt">plot =</span> <span class="st">&quot;bar&quot;</span>, 
+    <span class="dt">scale =</span> <span class="st">&quot;log&quot;</span>)</code></pre></div>
+<p><img src="ACSN-vignette_files/figure-html/barplot-1.png" alt="" /></p>
+<p>Where:</p>
+<ul>
+<li><p>enrichment is the result from the enrichment or multisample_enrichment function</p></li>
+<li><p>scale can be set to either identity or log and will affect the gradient of colors</p></li>
+<li><p>nrow is the number of rows that should be used to plot all barplots (default is 1)</p></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

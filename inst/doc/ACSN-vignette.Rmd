@@ -1,0 +1,197 @@
+---
+title: "ACSN description"
+author: "Paul Deveau"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+      self_contained: no
+      fig_width: 7
+      fig_height: 7
+vignette: >
+  %\VignetteIndexEntry{ACSN description}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+
+---
+# <a name="I">ACSN Enrichment</a>
+
+##  <a name="IIA">Description </a>
+ACSNMineR is an R package, freely available.
+
+ACSN stands for Atlas of Cancer Signaling Networks, and shows gene interaction in pathways relevant to cancer.
+
+This package is designed for an easy analysis of gene maps (either user imported from gmt files or ACSN maps).
+Its aim is to allow a statistical analysis of statistically enriched or depleted pathways from a user imported gene list, as well as a graphic representation of results.
+
+This readme contains:
+
+  [1. This description](#IIA)
+
+  [2. Usage section](#IIB)
+
+  [2.1. Pathway analysis](#IIIA)
+  
+  [2.1.1 Import gmt files](#IIIA1)
+  
+  [2.1.2 Perform analysis](#IIIA2)
+  
+  [2.2. Data vizualization](#IIIB)
+
+  [2.2.1. Heatmaps](#IVA)
+
+  [2.2.2. Barplots](#IVB)
+
+
+##  <a name="IIB">Usage </a>
+###  <a name="IIIA">Pathway analysis</a> 
+______
+
+#### <a name = "IIIA1"> Import gmt files </a>
+
+Gmt files can be imported thanks to the format_from_gmt function. 
+Let's use saved data from the package:
+
+```{r gmt_example}
+# Retrieve path of the example gmt
+file<-system.file("extdata", "cellcycle_short.gmt", package = "ACSNMineR")
+# Then import it
+gmt<-ACSNMineR::format_from_gmt(file)
+```
+```{r gmt_display, echo = FALSE}
+knitr::kable(gmt[,1:10])
+```
+
+ACSN maps are built-in and can easily be accessed through ACSNEnrcihment::ACSN_maps:
+```{r gmt_map_code, eval = FALSE}
+# Name of available maps:
+names(ACSNMineR::ACSN_maps)
+
+````
+`````{r gmt_map_show, echo = FALSE}
+knitr::kable(names(ACSNMineR::ACSN_maps))
+````
+
+````{r gmt_access_code, eval = FALSE}
+#And accessing them:
+ACSNMineR::ACSN_maps$CellCycle
+````
+````{r gmt_access_display, echo = FALSE}
+knitr::kable(head(ACSNMineR::ACSN_maps$CellCycle[,1:10]), row.names = FALSE)
+```
+
+The gene set that was used for tests is the following:
+````{r test_genes,eval = FALSE}
+ACSNMineR::genes_test
+````
+```{r test_genes_show, echo = FALSE}
+knitr::kable(ACSNMineR::genes_test)
+```
+
+#### <a name = "IIIA2"> Perform analysis </a>
+
+Gene set enrichment for a single set can be performed by calling:
+````{r Analysis_code}
+Example<-ACSNMineR::enrichment(ACSNMineR::genes_test,
+    min_module_size = 10, 
+    threshold = 0.05,
+    maps = list(cellcycle = ACSNMineR::ACSN_maps$CellCycle))
+````
+```{r Analysis_show, echo = FALSE}
+knitr::kable(Example,row.names = FALSE)
+````
+
+Where:
+
+* genes_test is a character vector to test
+
+* min_module_size is the minimal size of a module to be taken into account
+
+* threshold is the maximal p-value that will be displayed in the results (all modules with p-values higher than threshold will be removed)
+
+* maps is a list of maps -here we take the cell cycle map from ACSN-  imported through the format_from_gmt() function of the package
+
+Gene set enrichment for multiple sets/cohorts can be performed by calling:
+
+````{r multi_analysis_code}
+Example<-ACSNMineR::multisample_enrichment(Genes_by_sample = list(set1 = ACSNMineR::genes_test[-1],
+                                                              set2 = ACSNMineR::genes_test[-2]),
+    maps = ACSNMineR::ACSN_maps$CellCycle,
+    min_module_size = 10,
+    cohort_threshold = FALSE)
+````
+```{r multi_ana_code_1, eval = FALSE}
+print(Example[[1]])
+````
+```{r multi_ana_show_1, echo = FALSE}
+knitr::kable(Example[[1]],row.names = FALSE)
+````
+```{r multi_ana_code_2, eval = FALSE}
+print(Example[[2]])
+````
+```{r multi_ana_show_2, echo = FALSE}
+knitr::kable(Example[[2]],row.names = FALSE)
+
+````
+
+Where:
+
+* Genes_by_sample is a list of character vectors to test
+
+* min_module_size is the minimal size of a module to be taken into account
+
+* maps is a list of maps -here we take the cell cycle map from ACSN - imported through the format_from_gmt() function of the package
+
+
+###  <a name="IIIB">Data visualization</a> 
+______
+
+Results from the enrichment analysis function can be transformed to images thanks to the represent enrichment function. Two different plot are available: heatmap and barplot.
+
+####  <a name="IVA">Heatmaps</a>  
+______
+
+Heatmaps for single sample or multiple sample representing p-values can be easily generated thanks to the represent_enrichment function.
+
+````{r heatmap_plot}
+ACSNMineR::represent_enrichment(enrichment = list(
+    SampleA = ACSNMineR::enrichment_test[1:10,], 
+    SampleB = ACSNMineR::enrichment_test[3:10,]),
+    plot = "heatmap", 
+    scale = "log",
+    low = "steelblue" , high ="white",
+    na.value = "grey")
+````
+
+Where:
+
+* enrichment is the result from the enrichment or multisample_enrichment function
+
+* scale can be set to either identity or log and will affect the gradient of colors
+
+* low: the color for the low (significant) p-values 
+
+* high: color for the high (less significant) p-values 
+
+* na.value is the color in which tiles which have "NA" should appear
+
+
+####  <a name="IVB">Barplots</a> 
+______
+
+A barplot can be achieved by using the following:
+````{r barplot, warning = FALSE}
+ACSNMineR::represent_enrichment(enrichment = list(
+    SampleA = ACSNMineR::enrichment_test[1:10,], 
+    SampleB = ACSNMineR::enrichment_test[3:10,]),
+    plot = "bar", 
+    scale = "log")
+
+````
+
+Where:
+
+* enrichment is the result from the enrichment or multisample_enrichment function
+
+* scale can be set to either identity or log and will affect the gradient of colors
+
+* nrow is the number of rows that should be used to plot all barplots (default is 1)
