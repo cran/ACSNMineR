@@ -1,5 +1,11 @@
-[![Build Status](https://travis-ci.org/sysbio-curie/ACSN_Enrichment.svg?branch=master)](https://travis-ci.org/sysbio-curie/ACSN_Enrichment)
-# <a name="I">ACSN Enrichment</a>
+####Build Status:
+[![Build Status](https://travis-ci.org/sysbio-curie/ACSNMineR.svg?branch=master)](https://travis-ci.org/sysbio-curie/ACSN_Enrichment)
+####CRAN Status and statistics : 
+[![CRAN version](http://www.r-pkg.org/badges/version/ACSNMineR)](http://www.r-pkg.org/badges/version/ACSNMineR)
+[![CRAN downloads weekly](http://cranlogs.r-pkg.org/badges/ACSNMineR)](http://cran.rstudio.com/web/packages/ACSNMineR/index.html)
+[![CRAN total](http://cranlogs.r-pkg.org/badges/grand-total/ACSNMineR)](http://cran.rstudio.com/web/packagesACSNMineR/index.html)
+
+# <a name="I">ACSNMineR</a>
 
 
 ##  <a name="IIA">Description </a>
@@ -60,7 +66,7 @@ Results from the enrichment analysis function can be transformed to images thank
 ______
 Heatmaps for single sample or multiple sample representing p-values can be easily generated thanks to the represent_enrichment function.
 > represent_enrichment(enrichment = list(SampleA = enrichment_test[1:10,], 
-    'SampleB = enrichment_test[3:10,]),
+    SampleB = enrichment_test[3:10,]),
     plot = "heatmap", 
     scale = "log",
     low = "steelblue" , high ="white",
