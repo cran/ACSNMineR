@@ -16,11 +16,22 @@
 #' @param min_module_size will remove from the analysis all modules which are (strictly) smaller than threshold
 #' @param universe Universe on which the statistical analysis should be performed. 
 #' Can be either "HUGO","ACSN","map_defined", or a character vector of genes.
-#' @param threshold : maximal p-value (corrected if correction is enabled) that will be displayed
+#' @param Remove_from_universe Default is NULL. A list of genes that should not be considered for enrichment 
+#' (will be removed from input, maps, and universe). The size of universe and map will be updated after removal. 
+#' @param threshold maximal p-value (corrected if correction is enabled) that will be displayed
 #' @param alternative One of "greater", "less", "both" or "two.sided"
 #' Greater will check for enrichment, less will check for depletion, and both will look for 
 #' both and will keep track of the side,
-#' while two-sided (only for fisher test) checks if there is a difference .
+#' while two-sided (only for fisher test) checks if there is a difference.
+#' @return Output is a dataframe with the following columns:\describe{
+#'  \item{module}{The name of the map or the module preceded by the map}
+#'  \item{module_size}{The number of genes in the module after taking into account universe reduction}
+#'  \item{nb_genes_in_module}{The number of genes from input list in the module}
+#'  \item{genes_in_module}{Names of the genes from input list in the module, space separated}
+#'  \item{universe_size}{size of the input universe}
+#'  \item{nb_genes_in_universe}{number of genes from the input list that are found in the universe}
+#'  \item{test}{the kind of test that was looked for. "greater" when enrichment is tested, "less" when depletion is tested, or "two.sided"}
+#' }
 #' @examples enrichment(genes_test,min_module_size = 10, 
 #'    threshold = 0.05,
 #'    maps = list(cellcycle = ACSNMineR::ACSN_maps$CellCycle),
@@ -38,6 +49,7 @@ enrichment<-function(Genes=NULL,
                      statistical_test = "fisher",
                      min_module_size = 5,
                      universe = "map_defined",
+                     Remove_from_universe = NULL,
                      threshold = 0.05,
                      alternative = "greater"){
   
@@ -84,8 +96,20 @@ enrichment<-function(Genes=NULL,
     universe_was_ACSN<-FALSE
   }
   
+
   ### Checking that gene list is unique
   Genes<-unique(Genes)
+  if(!is.null(Remove_from_universe)){
+    Remove_from_universe<-unique(Remove_from_universe)
+    test<-Genes %in% Remove_from_universe
+    if(sum(test)){
+      warning(paste("The following genes were found in input and asked to be removed from universe:\n",
+                    paste(Genes[test],collapse = " "))
+      )
+      Genes<-Genes[!test]
+    }
+    
+  }
   Genes_size<-length(Genes)    
   if(!(alternative %in% c("greater","less","both","two.sided"))){
     stop('enrichment variable should be one of:"greater","less","both","two.sided" ')
@@ -103,15 +127,37 @@ enrichment<-function(Genes=NULL,
   ### If universe is ACSN: extract genes from ACSN and define it as universe
   if(length(universe) == 1){
     if(universe == "ACSN"){
-      genesACSN<-unique(unlist(lapply(X = ACSNMineR::ACSN_maps,FUN = function(z){
-        return(as.character(unique(z[,-(1:2)])))
-      })))
-      universe<-genesACSN[genesACSN!=""]
-      size<-length(genesACSN)
+      if(is.null(Remove_from_universe)){
+        genesACSN<-unique(unlist(lapply(X = ACSNMineR::ACSN_maps,FUN = function(z){
+          return(as.character(unique(z[,-(1:2)])))
+        })))
+        universe<-genesACSN[genesACSN!=""]
+        size<-length(genesACSN)
+      }
+      else{ # Filter out genes to be removed from analysis
+        genesACSN<- genesACSN<-unique(unlist(lapply(X = ACSNMineR::ACSN_maps,FUN = function(z){
+          return(as.character(unique(z[,-(1:2)])))
+        })))
+        universe<-genesACSN[!(genesACSN %in% c("",Remove_from_universe))]
+        size<-length(genesACSN)
+      }
     }
     else if(universe == "HUGO"){
       ###Total size of approved symbols, from http://www.genenames.org/cgi-bin/statistics, as of October 8th 2015
-      size = 39480
+      if(is.null(Remove_from_universe)){
+        size = 39480
+      }
+      else{ ## Filter out Remove_from_universe
+        size = 39480 - length(Remove_from_universe)
+        if(is.list(maps)){
+          maps<-lapply(maps,FUN = function(df){
+            df[df %in% Remove_from_universe]<-""
+          })
+        }
+        else{
+          maps[maps %in% Remove_from_universe]<-""
+        }
+      }
     }
     
     else if( universe == "map_defined"){
@@ -126,6 +172,10 @@ enrichment<-function(Genes=NULL,
         genesmaps<-unique(as.character(maps[,-(1:2)]))
       }
       genesmap<-as.character(genesmap[genesmap!=""])
+      
+      if(!is.null(Remove_from_universe)){
+        genesmap<-genesmap[!(genesmap %in% Remove_from_universe)]
+      }
       is_in_ACSN<-Genes %in% genesmap
       S<-sum(!is_in_ACSN)
       if(S > 0){ ### removing genes from list, that are not from ACSN
@@ -137,7 +187,7 @@ enrichment<-function(Genes=NULL,
       
     }
     else{
-      stop("Invalid universe input: must be 'HUGO','ACSN','map_defined', or a gene list")
+      stop("Invalid universe input: must be 'HUGO','ACSN','map_defined', or a list of genes as character vector")
     }
     
     ### Length of universe can be changed if "ACSN"
@@ -538,15 +588,26 @@ enrichment<-function(Genes=NULL,
 #' @param min_module_size will remove from the analysis all modules which are (strictly) smaller than threshold
 #' @param universe Universe on which the statistical analysis should be performed. Can be either "HUGO","ACSN" 
 #' ,"map_defined", or a character vector of genes.
+#' @param Remove_from_universe Default is NULL. A list of genes that should not be considered for enrichment 
+#' (will be removed from input, maps, and universe). The size of universe and map will be updated after removal. 
 #' @param threshold maximal p-value (corrected if correction is enabled) that will be displayed
 #' @param cohort_threshold if TRUE modules will be kept in all samples if at least one sample 
 #' has p-value lower than threshold, otherwise the threshold is applied for each sample independently.
 #' @param alternative One of "greater", "less", "both", or "two.sided" (only for fisher test).
 #' Greater will check for enrichment, less will check for depletion, and both will look for both.
-#' @examples multisample_enrichment(Genes_by_sample = list(set1 = genes_test[-1],set2=genes_test[-2]),
+#' @return Output is a list of dataframes with names the names given in `Genes_by_sample` with the following columns:\describe{
+#'  \item{module}{The name of the map or the module preceded by the map}
+#'  \item{module_size}{The number of genes in the module after taking into account universe reduction}
+#'  \item{nb_genes_in_module}{The number of genes from input list in the module}
+#'  \item{genes_in_module}{Names of the genes from input list in the module, space separated}
+#'  \item{universe_size}{size of the input universe}
+#'  \item{nb_genes_in_universe}{number of genes from the input list that are found in the universe}
+#'  \item{test}{the kind of test that was looked for. "greater" when enrichment is tested, "less" when depletion is tested, or "two.sided"}
+#' }
+#' @examples multisample_enrichment(Genes_by_sample = list(set1 = genes_test,set2=c(genes_test,"PTPRD")),
 #' maps = list(cellcycle = ACSNMineR::ACSN_maps$CellCycle),
 #' min_module_size = 10,
-#' universe = "ACSN")
+#' universe = "ACSN",cohort_threshold = FALSE)
 #' @export
 
 multisample_enrichment<-function(Genes_by_sample=NULL,
@@ -559,6 +620,7 @@ multisample_enrichment<-function(Genes_by_sample=NULL,
                                  statistical_test = "fisher",
                                  min_module_size = 5,
                                  universe = "map_defined",
+                                 Remove_from_universe = NULL,
                                  threshold = 0.05,
                                  cohort_threshold = TRUE,
                                  alternative = "greater"){
@@ -573,6 +635,7 @@ multisample_enrichment<-function(Genes_by_sample=NULL,
                                 statistical_test = statistical_test,
                                 min_module_size = min_module_size,
                                 universe = universe,
+                                Remove_from_universe =Remove_from_universe,
                                 threshold =  1)
                    })
     kept_modules<-character() 
@@ -597,6 +660,7 @@ multisample_enrichment<-function(Genes_by_sample=NULL,
                                 statistical_test = statistical_test,
                                 min_module_size = min_module_size,
                                 universe = universe,
+                                Remove_from_universe = Remove_from_universe,
                                 threshold =  threshold)
                    })
     names(result)<-names(Genes_by_sample)
@@ -630,211 +694,6 @@ p.val.calc<-function(x,y,z,a,stat_test,alt){
   }
 }
 
-#### Graphic representation of results ####
-#' Graphic representation of enrichment
-#'@param enrichment Data frame or list of dataframes with p-values or corrected p-values (whenever available) and module names for representation.
-#'The name of the dataframe will be used as sample name.
-#'@param plot Any of "heatmap" or "bar"
-#'@param scale Any of "log" or "identity"
-#'@param low Color to be used in heatmap mode corresponding to lowest value
-#'@param high Color to be used in heatmap mode corresponding to highest value
-#'@param nrow Number of rows of the grid for display in bar mode.
-#'@param sample_name  used only is enrichment is a dataframe
-#'@param na.value color for the missing values in the heatmap
-#'@examples represent_enrichment(enrichment = list(SampleA = enrichment_test[1:10,], 
-#'SampleB = enrichment_test[3:10,]), plot = "heatmap", scale = "log")
-#'@import ggplot2 
-#'@importFrom gridExtra grid.arrange
-#'@export
-represent_enrichment<-function(enrichment, plot = "heatmap" , scale = "log", 
-                               low = "steelblue" , high ="white",
-                               nrow = 1,sample_name = "Sample",
-                               na.value = "grey"){
-  
-  
-  if(is.data.frame(enrichment)){
-    if("p.value.corrected" %in% colnames(enrichment)){
-      enrichment$p.values<-enrichment$p.value.corrected
-    }
-    else if("p.value" %in% colnames(enrichment)){
-      enrichment$p.values<-enrichment$p.value
-    }
-    else{
-      warning("dataframe has no column 'p.value' or 'p.value.corrected'. Exiting!")
-      return(NA)
-    }
-    enrichment$sample_name<-sample_name 
-    enrichment$p.values<-cnum(enrichment$p.values)
-    if(plot == "heatmap"){
-      
-      q<-ggplot2::ggplot(enrichment,
-                         ggplot2::aes_string(x= "sample_name",
-                                             y = "module", 
-                                             fill = "p.values"))+ggplot2::xlab("")+ ggplot2::ylab("Modules") + ggplot2::geom_tile()
-      if(scale == "log"){
-        q<- q + ggplot2::scale_fill_gradient("p-values",low = low , high = high, na.value = na.value, trans = "log10")
-      }
-      else if(scale == "reverselog"){
-        q<- q + ggplot2::scale_fill_gradient("p-values",low = high , 
-                                             high = low, na.value = na.value, 
-                                             trans = reverselog_trans())
-      }
-      
-      else{
-        q<-q+ ggplot2::scale_fill_gradient("p-values",low = low , high = high, na.value = na.value)
-      }
-      
-    }
-    else{
-      q<-ggplot2::ggplot(data= enrichment,
-                          aes_string(x= "module",
-                                    y= "p.values"),
-                        xlab = "Modules", ylab = "p-values")
-      if(scale == "log"){
-        q<- q + ggplot2::scale_y_continuous(trans = "log10")
-      }
-      else if(scale == "reverselog"){
-        q<- q + ggplot2::scale_y_continuous(trans = reverselog_trans())
-      }
-      q<-q+ggplot2::theme_minimal()+ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 0), axis.ticks = ggplot2::element_blank())
-      q<-q+ggplot2::geom_bar(stat = "identity")
-    }    
-  }
-  else if(is.list(enrichment)){
-    sample_names<-names(enrichment)
-    if(is.null(sample_names)){
-      warning("Your list has no names... Will use numbers instead")
-      sample_names<-1:length(enrichment)
-    }
-    if(plot == "heatmap"){
-      dataset<-data.frame()
-      
-      ### check if there is a need to add NAs for modules which are not present in all datasets
-      all_equal<-TRUE
-      modules<-as.character(enrichment[[1]]$module)
-      for(sample in enrichment){
-        if(!setequal(modules,as.character(sample$module))){
-          all_equal<-FALSE
-          modules<-unique(c(modules,as.character(sample$module)))
-        }
-      }
-      tracker<-0
-      if(all_equal){
-        
-        for(sample in enrichment){ ### Modules are present in all samples
-          tracker<-tracker+1
-          if("p.value.corrected" %in% colnames(sample)){
-            dataset<-rbind(dataset, cbind(modules,sample_names[tracker],cnum(sample$p.value.corrected)))
-          }
-          else if("p.value" %in% colnames(sample)){
-            dataset<-rbind(dataset, cbind(modules,sample_names[tracker],cnum(sample$p.value)))
-          }
-          else{
-            warning(paste("Element", sample_names[tracker],"has no p.value column"))
-            return(NA)
-          }
-        }
-        colnames(dataset)<-c("module","sample_name","p.values")
-      }
-      else{ ###need to fill with NAs
-        ### Not functional yet
-        
-        for(sample in enrichment){
-          tracker<-tracker + 1
-          
-          test<-modules %in% as.character(sample$module)
-          restricted_modules<-as.character(modules[test])
-          position_modules<-as.numeric(sapply(X = restricted_modules,FUN = function(z){
-            which(sample$module ==z)
-          }))
-          
-          if(sum(!test)>0){ ### complement only when necessary
-            complement<-as.character(modules[!test])
-            if("p.value.corrected" %in% colnames(sample)){ ### 
-              
-              spare_dataset<-rbind(cbind(module = restricted_modules, sample_name = sample_names[tracker], 
-                                         p.values = cnum(sample$p.value.corrected[position_modules])),
-                                   cbind(module = complement, 
-                                         sample_name = sample_names[tracker],
-                                         p.values = NA))
-              
-            }
-            else if("p.value" %in% colnames(sample)){ ### 
-              spare_dataset<-rbind(cbind(restricted_modules, sample_names[tracker], cnum(sample$p.value[position_modules])),
-                                   cbind(complement, sample_names[tracker],NA))
-              
-            } else{
-              warning(paste("Element", sample_names[tracker],"has no p.value column"))
-              return(NA)
-            }
-            colnames(spare_dataset)<-c("module","sample_name","p.values")
-            dataset<-rbind(dataset, spare_dataset)
-          }
-          else{ ### rbind dataframe with values
-            if("p.value.corrected" %in% colnames(sample)){ ### 
-              
-              spare_dataset<-cbind(module = restricted_modules, sample_name = sample_names[tracker], 
-                                   p.values = cnum(sample$p.value.corrected[position_modules]))
-              
-            }
-            else if("p.value" %in% colnames(sample)){ ### 
-              spare_dataset<-cbind(restricted_modules, sample_names[tracker], cnum(sample$p.value[position_modules]))
-            } else{
-              warning(paste("Element", sample_names[tracker],"has no p.value column"))
-              return(NA)
-            }
-            colnames(spare_dataset)<-c("module","sample_name","p.values")
-            dataset<-rbind(dataset, spare_dataset)
-            
-          }
-        }
-      }
-      dataset$p.values<-cnum(dataset$p.values)
-      ### Plot heatmap
-      q<-ggplot2::ggplot(dataset,
-                         aes_string(x= "sample_name",
-                                    y = "module", 
-                                    fill = "p.values"))+ggplot2::xlab("")+ ggplot2::ylab("Modules") + ggplot2::geom_tile()
-      if(scale == "log"){
-        q<- q + ggplot2::scale_fill_gradient("p-values",low = low , high = high, na.value = na.value, trans = "log10")
-      }
-      else if(scale == "reverselog"){
-        q<- q + ggplot2::scale_fill_gradient("p-values",low = high , high = low, na.value = na.value , trans = reverselog_trans())
-        
-        
-      }     
-      else{
-        q<-q+ ggplot2::scale_fill_gradient("p-values",low = low , high = high, na.value = na.value)
-      }
-      q<-q+ggplot2::theme_minimal()+ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 0), axis.ticks = ggplot2::element_blank())
-    }
-    else{ ### barplot with grid
-      names_sample<-names(enrichment)
-      plot<-list()
-      for(s in 1:length(enrichment)){
-        plot[[s]]<-represent_enrichment(enrichment[[s]], plot = "bar" , 
-                                        scale = scale, 
-                                        sample_name = names_sample[s])
-        
-      }
-      #       if(length(plot)%%nrow ==0){
-      #         ncol <- length(enrichment)/nrow
-      #       }
-      #       else{
-      #         ncol <- floor(length(enrichment)/nrow)+1
-      #       }
-      return(do.call(gridExtra::grid.arrange, c(plot, nrow=nrow)))
-    }
-    
-  }
-  else{
-    warning("Wrong input format for enrichment!")
-    return(NA)
-    
-  }
-  return(q)
-  
-}
 
 #' Convert to numeric
 #' 
@@ -842,103 +701,3 @@ represent_enrichment<-function(enrichment, plot = "heatmap" , scale = "log",
 cnum<-function(x){
   return(as.numeric(as.character(x)))
 }
-
-
-#' Import data from gmt files
-#' Convert gmt file to dataframe that can be used for anaysis
-#'@param path Path to the gmt file to be imported
-#'@examples file<-system.file("extdata", "cellcycle_short.gmt", package = "ACSNMineR")
-#'format_from_gmt(file)
-#'@export
-
-format_from_gmt<-function(path = ""){
-  
-  Lines<-readLines(path,warn = FALSE)
-  
-  
-  ### Filter out non-genes
-  if(length(Lines)==1){ ### testing if gmt is single line
-    gmt<-unlist(strsplit(x = Lines,split = "\t"))
-    short_gmt<-gmt[-c(1,2)]
-    pos<-grepl(pattern = "\\*",x = short_gmt)
-    result<-c(gmt[c(1,2)],gmt[-c(1,2)][!pos])
-    result[2]<-length(result)-2
-    result<-as.data.frame(t(result))
-    
-    
-  }
-  else{
-    max_length<-max(sapply(X=Lines,FUN = function(z){
-      z2<-gsub("\t","",z)
-      return(nchar(z)-nchar(z2))
-    }))+1  ### max gets number of intervals, so number of items is max +1
-    gmt<-read.csv(path,header = FALSE, 
-                  sep = "\t",fill = TRUE,
-                  col.names = paste("V",1:max_length,sep="")
-    )
-    gmt[is.na(gmt)]<-""
-    result<-t(apply(gmt,1,FUN = function(z){
-      pos<-grepl(pattern = "\\*",x = z)
-      res<-z
-      res[pos]<-""
-      return(res)
-    }))
-    
-    if(sum(is.na(x = result[,ncol(result)]))){
-      result<-result[,-ncol(result)]
-    }
-      result[,2]<-apply(result[,-(1:2)],MARGIN =  1, FUN = function(z) sum(as.character(z)!=""))
-    
-  }
-  
-  return(result)
-}
-
-#' Scale for barplots and heatmaps
-#' 
-#' Outputs the "-log" of a scale
-#' @param base : base for the log, defaut is 10
-#' @importFrom scales trans_new log_breaks
-#' @export
-#' 
-reverselog_trans<-function(base = 10){
-  trans<-function(x) -log(x,base)
-  inv<-function(x) base^(-x)
-  
-  scales::trans_new(name = "reverslog",transform = trans,inverse = inv,
-              breaks = scales::log_breaks(base = base),
-              domain = c(10^(-60),Inf)
-            )
-  
-}
-
-
-#' Atlas of Cancer Signalling Networks
-#' 
-#' A dataset containing the six maps of ACSN: apoptosis, cell cycle, DNA reparation, EMT motility, survival, and the master map
-#' @format A list of dataframes
-#' \describe{
-#'  \item{Apoptosis}{Map of apoptosis}
-#'  \item{CellCycle}{Map of the cell cycle}
-#'  \item{DNA_repair}{Map of DNA repair}
-#' }
-#' @source \url{https://acsn.curie.fr/downloads.html}
-"ACSN_maps"
-
-#' Set of genes to test map
-#' 
-#' Genes of high importance in oncogenesis
-#' @format A character vector
-"genes_test"
-
-#' Result from enrichment test of "genes_test" on the ACSN maps
-#' 
-#' Parameters: bonferroni correction, min module size = 5
-#' @format data.frame
-#' \describe{
-#'  \item{module}{Name of module}
-#'  \item{genes_in_module}{Genes from genes_test in module}
-#'  \item{p.value}{Uncorrected p-value}
-#'  \item{p.value.corrected}{p-value corrected for multiple testing by Bonferroni correction}
-#'  }
-"enrichment_test"

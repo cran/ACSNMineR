@@ -1,3 +1,7 @@
+## ---- include = FALSE----------------------------------------------------
+library(ACSNMineR)
+knitr::opts_chunk$set(fig.dpi = 96)
+
 ## ----gmt_example---------------------------------------------------------
 # Retrieve path of the example gmt
 file<-system.file("extdata", "cellcycle_short.gmt", package = "ACSNMineR")
@@ -64,13 +68,15 @@ ACSNMineR::represent_enrichment(enrichment = list(
     plot = "heatmap", 
     scale = "reverselog",
     low = "steelblue" , high ="white",
-    na.value = "grey")
+    na.value = "grey")+theme(axis.text = element_text(size = 6,angle = 45),
+                             legend.text = element_text(size = 6),
+                             legend.title = element_text(size = 8))
 
-## ----barplot, warning = FALSE--------------------------------------------
+## ----barplot, warning = FALSE,message = FALSE----------------------------
 ACSNMineR::represent_enrichment(enrichment = list(
     SampleA = ACSNMineR::enrichment_test[1:10,], 
     SampleB = ACSNMineR::enrichment_test[3:10,]),
     plot = "bar", 
-    scale = "log")
+    scale = "reverselog")
 
 
